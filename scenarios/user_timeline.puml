@@ -1,0 +1,26 @@
+@startuml "user timeline"
+
+actor Пользователь as user order 1
+participant WebService as web order 2
+participant PostService as pservice order 3
+database MongoDB as mongo order 4
+participant UserService as uservice order 5
+database PostgreSQL as postgres order 6
+
+user -> web: получить ленту сообщений пользователя X
+
+web -> pservice: получить сообщения пользователя X
+pservice -> mongo: list
+pservice <-- mongo: return
+web <-- pservice: сообщения пользователя X
+
+web -> uservice: получить инфо о пользователях сообщений
+uservice -> postgres: get
+uservice <-- postgres: return
+web <-- uservice: инфо о пользователях
+
+web -> web: агрегация данных
+
+user <-- web: лента сообщений пользователя X
+
+@enduml

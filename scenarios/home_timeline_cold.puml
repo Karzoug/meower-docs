@@ -1,0 +1,58 @@
+@startuml "home timeline cold"
+
+actor Пользователь as user order 1
+participant WebService as web order 2
+
+participant TimelineService as tservice order 3
+database Redis as redis order 4
+
+participant RelationService as rservice order 5
+database Neo4j as neo4j order 6
+
+participant PostService as pservice order 7
+database MongoDB as mongo order 8
+
+participant UserService as uservice order 9
+database PostgreSQL as postgres order 10
+
+user -> web: получить ленту сообщений
+
+web -> tservice: получить id сообщений \n и пользователей
+
+tservice -> redis: get timeline
+tservice <-[#red]- redis: not found
+
+tservice -> rservice: получить список подписок
+rservice -> neo4j: list following
+rservice <-- neo4j: return
+tservice <-- rservice: список подписок
+
+tservice -> tservice: фильтруем скрытые подписки
+
+tservice -> pservice: получить id сообщений подписок и их авторов
+pservice -> mongo: list
+pservice <-- mongo: return
+tservice <-- pservice: id сообщений подписок и их авторов
+
+web <-- tservice: id сообщений подписок и их авторов
+
+par
+    web -> pservice: получить сообщения по id
+    pservice -> mongo: get
+    pservice <-- mongo: return
+    web <-- pservice: сообщения
+else
+    web -> uservice: получить инфо о пользователях по id
+    uservice -> postgres: get
+    uservice <-- postgres: return
+    web <-- uservice: инфо о пользователях
+end
+
+web -> web: агрегация данных
+
+user <-- web: лента сообщений пользователя
+
+tservice --> redis: добавить id сообщений и пользователей \n в ленту пользователя
+tservice <-- redis: success
+
+@enduml

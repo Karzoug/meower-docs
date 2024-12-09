@@ -1,0 +1,38 @@
+@startuml "follow"
+
+actor Пользователь as user order 0
+
+participant WebService as wservice order 1
+
+participant RelationService as rservice order 2
+database Neo4j as neo4j order 3
+database Kafka as kafka order 4
+participant TimelineService as tservice order 5
+database Redis as redis order 6
+participant PostService as pservice order 7
+database MongoDB as mongo order 8
+
+user -> wservice: подписка на сообщения \n пользователя X
+wservice -> rservice: подписка \n на пользователя X
+rservice -> neo4j: create follow relation
+rservice <-- neo4j: success
+wservice <-- rservice: подписка создана
+user <-- wservice : успешно подписаны
+
+rservice ->> kafka: отправить событие "подписка"
+tservice ->> kafka: получить событие "подписка"
+
+tservice -> redis: получить ленту пользователя
+tservice <-- redis: success
+
+tservice -> pservice: получить id сообщений пользователя X
+pservice -> mongo: list
+pservice <-- mongo: return
+tservice <-- pservice: id сообщений пользователя X
+
+tservice -> tservice: объединить полученные и \n имеющиеся id сообщений и авторов
+
+tservice -> redis: обновить id сообщений и пользователей \n из ленты пользователя
+tservice <-- redis: success
+
+@enduml

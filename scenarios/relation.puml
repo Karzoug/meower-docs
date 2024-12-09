@@ -1,0 +1,31 @@
+@startuml "mute"
+
+actor Пользователь as user order 0
+
+participant WebService as wservice order 1
+
+participant RelationService as rservice order 2
+database Neo4j as neo4j order 3
+database Kafka as kafka order 4
+participant TimelineService as tservice order 5
+database Redis as redis order 6
+
+user -> wservice: скрыть сообщения \n пользователя X
+wservice -> rservice: заглушить \n пользователя X
+rservice -> neo4j: create mute relation
+rservice <-- neo4j: success
+wservice <-- rservice: пользователь заглушен
+user <-- wservice : сообщения пользователя X \n скрыты
+
+rservice ->> kafka: отправить событие "заглушен"
+tservice ->> kafka: получить событие "заглушен"
+
+tservice -> redis: получить ленту пользователя
+tservice <-- redis: success
+
+tservice <-- tservice: удалить сообщения \n пользователя X
+
+tservice -> redis: сохранить ленту пользователя
+tservice <-- redis: success
+
+@enduml

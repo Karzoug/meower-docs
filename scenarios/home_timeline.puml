@@ -1,0 +1,40 @@
+@startuml "home timeline"
+
+actor Пользователь as user order 1
+participant WebService as web order 2
+
+participant TimelineService as tservice order 3
+database Redis as redis order 4
+
+participant PostService as pservice order 5
+database MongoDB as mongo order 6
+participant UserService as uservice order 7
+database PostgreSQL as postgres order 8
+
+user -> web: получить ленту сообщений
+
+web -> tservice: получить id сообщений \n и пользователей
+
+tservice -> redis: get timeline
+tservice <-[#green]- redis: return
+
+web <- tservice: id сообщений и пользователей
+
+par
+    web -> pservice: получить сообщения по id
+    pservice -> mongo: get
+    pservice <-- mongo: return
+    web <-- pservice: сообщения
+else
+    web -> uservice: получить инфо о пользователях по id
+    uservice -> postgres: get
+    uservice <-- postgres: return
+    web <-- uservice: инфо о пользователях
+end
+
+
+web -> web: агрегация данных
+
+user <-- web: лента сообщений пользователя
+
+@enduml

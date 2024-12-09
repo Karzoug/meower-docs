@@ -1,0 +1,43 @@
+@startuml "post"
+
+actor Пользователь as user order 0
+
+participant WebService as wservice order 2
+
+participant PostService as pservice order 2
+database MongoDB as mongo order 3
+
+database Kafka as kafka order 4
+participant TimelineService as tservice order 5
+database Redis as redis order 6
+
+participant RelationService as rservice order 7
+database Neo4j as neo4j order 8
+
+
+
+
+user -> wservice: отправить новое сообщение
+wservice -> pservice: новое сообщение
+pservice -> mongo: save post
+pservice <-- mongo: success
+wservice <-- pservice: опубликовано
+user <-- wservice: сообщение опубликовано
+
+pservice ->> kafka: отправить событие "новое сообщение"
+tservice ->> kafka: получить событие "новое сообщение"
+
+tservice -> rservice: получить список \n подписчиков пользователя
+rservice -> neo4j: list followers
+rservice <-- neo4j: return
+tservice <- rservice: список подписчиков
+
+tservice -> tservice: фильтруем подписчиков, \n которые скрыли пользователя
+
+tservice ->> kafka: отправить событие "новое сообщение для X"
+kafka ->> tservice: получить событие "новое сообщение для X"
+
+tservice -> redis: добавить id сообщения и пользователя \n в ленту пользователя X
+tservice <-- redis: success
+
+@enduml

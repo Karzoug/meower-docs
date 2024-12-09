@@ -1,0 +1,41 @@
+@startuml
+
+class User {
+  - id: string  
+  - username: string 
+  - name: string  
+  - image_url: string 
+  - status_text: string 
+}
+
+class Post {
+  - id: string
+  - text: string
+  - author_id: string
+}
+
+class Follow(-er/-ing) {
+  - user_id: string  
+  - follow_start: Time
+  - hidden: bool
+}
+
+class Timeline {
+  - elements: []
+}
+
+class timelineElement {
+  - author_id: string
+  - post_id: string
+}
+
+'Associations:
+'-------------
+
+"User" *-- "Post"  
+"Follow(-er/-ing)" --* "User"
+timelineElement o-- Timeline
+Timeline --* "User"
+Timeline --* "Post"
+
+@enduml
