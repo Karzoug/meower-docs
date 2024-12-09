@@ -29,9 +29,6 @@ class timelineElement {
   - post_id: string
 }
 
-'Associations:
-'-------------
-
 "User" *-- "Post"  
 "Follow(-er/-ing)" --* "User"
 timelineElement o-- Timeline
